@@ -1,0 +1,45 @@
+{
+  "uid": "apop-service-red",
+  "title": "APOP Service RED",
+  "tags": ["apop", "red"],
+  "schemaVersion": 39,
+  "refresh": "10s",
+  "time": {"from": "now-6h", "to": "now"},
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Request rate",
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (job, uri) (rate(http_server_requests_seconds_count[5m]))", "legendFormat": "{{job}} {{uri}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error ratio",
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (job) (rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) / clamp_min(sum by (job) (rate(http_server_requests_seconds_count[5m])), 1e-9)", "legendFormat": "{{job}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency p99",
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "histogram_quantile(0.99, sum by (job, le) (rate(http_server_requests_seconds_bucket[5m])))", "legendFormat": "{{job}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Decision latency vs 800ms",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"payment-service\",uri=\"/v1/payments\",method=\"POST\"}[5m])))", "legendFormat": "p99"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "JVM memory",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (job) (jvm_memory_used_bytes{area=\"heap\"})", "legendFormat": "{{job}}"}]
+    }
+  ]
+}

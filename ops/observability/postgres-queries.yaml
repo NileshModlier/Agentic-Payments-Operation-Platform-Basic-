@@ -1,0 +1,10 @@
+pg_replication:
+  query: |
+    SELECT EXTRACT(EPOCH FROM (now() - pg_last_xact_replay_timestamp())) AS lag_seconds
+    FROM pg_stat_database
+    WHERE datname = current_database()
+      AND pg_is_in_recovery()
+  metrics:
+    - lag_seconds:
+        usage: GAUGE
+        description: Seconds since the last replayed transaction on a standby

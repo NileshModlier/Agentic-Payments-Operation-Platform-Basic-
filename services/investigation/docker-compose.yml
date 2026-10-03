@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: investigation
+      POSTGRES_USER: investigation
+      POSTGRES_PASSWORD: investigation
+    ports:
+      - "5436:5432"
+  investigation:
+    build: .
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/investigation
+      INVESTIGATION_AGENT_ENABLED: "true"
+    depends_on:
+      - postgres

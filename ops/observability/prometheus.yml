@@ -1,0 +1,47 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+scrape_configs:
+  - job_name: payment-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8080"]
+        labels:
+          service: payment-service
+  - job_name: ledger-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8081"]
+        labels:
+          service: ledger-service
+  - job_name: settlement-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8082"]
+        labels:
+          service: settlement-service
+  - job_name: kafka
+    static_configs:
+      - targets: ["kafka-exporter:9308"]
+  - job_name: postgres-ledger
+    static_configs:
+      - targets: ["postgres-ledger:9187"]
+        labels:
+          database: ledger
+  - job_name: postgres-payment
+    static_configs:
+      - targets: ["postgres-payment:9187"]
+        labels:
+          database: initiation
+  - job_name: postgres-settlement
+    static_configs:
+      - targets: ["postgres-settlement:9187"]
+        labels:
+          database: settlement
+  - job_name: otel-collector
+    static_configs:
+      - targets: ["otel-collector:8889"]

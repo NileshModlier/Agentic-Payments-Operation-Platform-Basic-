@@ -1,0 +1,38 @@
+{
+  "uid": "apop-database",
+  "title": "APOP Databases",
+  "tags": ["apop", "postgres"],
+  "schemaVersion": 39,
+  "refresh": "10s",
+  "time": {"from": "now-6h", "to": "now"},
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Backends",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "pg_stat_database_numbackends", "legendFormat": "{{database}} {{datname}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Transactions",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (database) (rate(pg_stat_database_xact_commit[5m]))", "legendFormat": "{{database}} commits"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Cache hit ratio",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (database) (rate(pg_stat_database_blks_hit[5m])) / clamp_min(sum by (database) (rate(pg_stat_database_blks_hit[5m]) + rate(pg_stat_database_blks_read[5m])), 1e-9)", "legendFormat": "{{database}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Ledger replay lag",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "pg_replication_lag_seconds", "legendFormat": "{{database}}"}]
+    }
+  ]
+}

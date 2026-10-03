@@ -1,0 +1,1 @@
+RB-4 Technical failure. If the last detail code is POST_UNCERTAIN or a timeout, a human may approve RETRY_TECHNICAL. The retry uses the original idempotency key. The agent must not call the ledger.

@@ -1,0 +1,85 @@
+# Local observability stack for the three APOP services.
+# Prometheus scrapes the services on the host. Traces are exported only when a
+# service is started with MANAGEMENT_OTLP_TRACING_ENDPOINT=http://host.docker.internal:4318/v1/traces
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.111.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+
+  tempo:
+    image: grafana/tempo:2.6.1
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml:ro
+
+  loki:
+    image: grafana/loki:3.2.1
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    ports:
+      - "3100:3100"
+
+  promtail:
+    image: grafana/promtail:3.2.1
+    command: ["-config.file=/etc/promtail/config.yml"]
+    volumes:
+      - ./promtail.yaml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=15d"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./rules:/etc/prometheus/rules:ro
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana:11.3.1
+    ports:
+      - "3000:3000"
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:v1.8.0
+    command: ["--kafka.server=host.docker.internal:9092"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  postgres-ledger:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    environment:
+      DATA_SOURCE_NAME: postgresql://ledger:ledger@host.docker.internal:5432/ledger?sslmode=disable
+      PG_EXPORTER_EXTEND_QUERY_PATH: /etc/postgres-exporter/queries.yaml
+    volumes:
+      - ./postgres-queries.yaml:/etc/postgres-exporter/queries.yaml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  postgres-payment:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    environment:
+      DATA_SOURCE_NAME: postgresql://initiation:initiation@host.docker.internal:5433/initiation?sslmode=disable
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  postgres-settlement:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    environment:
+      DATA_SOURCE_NAME: postgresql://settlement:settlement@host.docker.internal:5434/settlement?sslmode=disable
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

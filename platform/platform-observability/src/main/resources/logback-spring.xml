@@ -1,0 +1,17 @@
+<configuration>
+    <springProperty scope="context" name="service" source="spring.application.name" defaultValue="apop"/>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeContext>false</includeContext>
+            <includeMdcKeyName>correlationId</includeMdcKeyName>
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>paymentId</includeMdcKeyName>
+            <includeMdcKeyName>reasonCode</includeMdcKeyName>
+            <customFields>{"service":"${service}"}</customFields>
+        </encoder>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

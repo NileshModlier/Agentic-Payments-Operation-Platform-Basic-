@@ -1,0 +1,1 @@
+RB-3 Fraud review. Read the assessment, the rule ids, and the similar-payment counts. A human records CONFIRM_DECLINE or RELEASE_TO_AUTHORIZE. The agent must not release the review.

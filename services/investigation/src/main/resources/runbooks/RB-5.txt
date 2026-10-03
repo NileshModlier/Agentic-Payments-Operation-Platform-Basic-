@@ -1,0 +1,1 @@
+RB-5 Amount mismatch. Compare the statement line with the posted journal. PROPOSE_REVERSAL cites the journal entry id. Above the four-eyes threshold a second human approves. The agent must not post the reversal.

@@ -1,0 +1,38 @@
+{
+  "uid": "apop-kafka",
+  "title": "APOP Kafka",
+  "tags": ["apop", "kafka"],
+  "schemaVersion": 39,
+  "refresh": "10s",
+  "time": {"from": "now-6h", "to": "now"},
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Consumer lag (records)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (consumergroup, topic) (kafka_consumergroup_lag)", "legendFormat": "{{consumergroup}} {{topic}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Under-replicated partitions",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (topic) (kafka_topic_partition_under_replicated_partition)", "legendFormat": "{{topic}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Dead-letter offset growth",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (topic) (increase(kafka_topic_partition_current_offset{topic=~\".*\\\\.dlq\"}[5m]))", "legendFormat": "{{topic}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Outbox unpublished age",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "apop_outbox_unpublished_age_seconds", "legendFormat": "{{job}}"}]
+    }
+  ]
+}

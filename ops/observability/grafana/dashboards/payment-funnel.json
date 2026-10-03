@@ -1,0 +1,38 @@
+{
+  "uid": "apop-payment-funnel",
+  "title": "APOP Payment Funnel",
+  "tags": ["apop", "payments"],
+  "schemaVersion": 39,
+  "refresh": "10s",
+  "time": {"from": "now-6h", "to": "now"},
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Created by rail",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (rail) (rate(apop_payment_intake_total[5m]))", "legendFormat": "{{rail}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Decisions by status",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (status) (rate(apop_payment_decision_total[5m]))", "legendFormat": "{{status}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Decision reason codes",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (reason_code) (rate(apop_payment_decision_total{reason_code!=\"none\"}[5m]))", "legendFormat": "{{reason_code}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Idempotency replays",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (result) (rate(apop_idempotency_replay_total[5m]))", "legendFormat": "{{result}}"}]
+    }
+  ]
+}

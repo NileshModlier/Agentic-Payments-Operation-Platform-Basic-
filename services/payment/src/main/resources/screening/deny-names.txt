@@ -1,0 +1,2 @@
+# Creditor names that fail screening. Matching is case-insensitive.
+BLOCKED BENEFICIARY

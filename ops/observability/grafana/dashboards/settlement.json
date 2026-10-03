@@ -1,0 +1,38 @@
+{
+  "uid": "apop-settlement",
+  "title": "APOP Settlement",
+  "tags": ["apop", "settlement"],
+  "schemaVersion": 39,
+  "refresh": "10s",
+  "time": {"from": "now-6h", "to": "now"},
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Settled by rail",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (rail) (rate(apop_payment_settled_total[5m]))", "legendFormat": "{{rail}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Settlement lag p99 vs 2s",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "histogram_quantile(0.99, sum by (rail, le) (rate(apop_settlement_lag_seconds_bucket[5m])))", "legendFormat": "{{rail}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Settlement executor lag",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (topic) (kafka_consumergroup_lag{consumergroup=\"payment-settlement-executor\"})", "legendFormat": "{{topic}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Settlement outbox age",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "apop_outbox_unpublished_age_seconds{job=\"settlement-service\"}", "legendFormat": "seconds"}]
+    }
+  ]
+}

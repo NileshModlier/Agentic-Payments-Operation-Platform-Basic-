@@ -1,0 +1,44 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 50000
+    expected_new_traces_per_sec: 20
+    policies:
+      - name: errors-and-timeouts
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+      - name: slow-decisions
+        type: latency
+        latency:
+          threshold_ms: 800
+      - name: successful-baseline
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 5
+
+exporters:
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+  prometheus:
+    endpoint: 0.0.0.0:8889
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [tail_sampling]
+      exporters: [otlp/tempo]
+    metrics:
+      receivers: [otlp]
+      exporters: [prometheus]

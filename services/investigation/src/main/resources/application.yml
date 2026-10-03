@@ -1,0 +1,70 @@
+spring:
+  config:
+    import: classpath:apop-observability.yml
+  application:
+    name: investigation-service
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: jdbc:postgresql://localhost:5436/investigation
+    username: investigation
+    password: investigation
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/investigation
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 1
+    template:
+      observation-enabled: true
+
+server:
+  port: 8084
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+investigation:
+  agent:
+    enabled: true
+  reversal:
+    four-eyes-minor: 1000000
+  llm:
+    mode: deterministic
+    route: investigation-default
+    endpoint: ""
+  tools:
+    mode: evidence
+    payment-base-url: http://localhost:8080
+    fraud-base-url: http://localhost:8083
+    ledger-base-url: http://localhost:8081
+    settlement-base-url: http://localhost:8082
+
+apop:
+  messaging:
+    enabled: false
+    case-topic: payments.investigation.case.v1
+    audit-topic: platform.audit.recorded.v1

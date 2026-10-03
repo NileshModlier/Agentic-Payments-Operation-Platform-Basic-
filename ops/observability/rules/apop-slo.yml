@@ -1,0 +1,88 @@
+groups:
+  - name: apop-slo
+    rules:
+      - record: apop:decision:error_ratio:5m
+        expr: |
+          sum(rate(http_server_requests_seconds_count{job="payment-service",uri="/v1/payments",method="POST",status=~"5.."}[5m]))
+          /
+          clamp_min(sum(rate(http_server_requests_seconds_count{job="payment-service",uri="/v1/payments",method="POST",status!~"400|409"}[5m])), 1e-9)
+      - record: apop:decision:error_ratio:1h
+        expr: |
+          sum(rate(http_server_requests_seconds_count{job="payment-service",uri="/v1/payments",method="POST",status=~"5.."}[1h]))
+          /
+          clamp_min(sum(rate(http_server_requests_seconds_count{job="payment-service",uri="/v1/payments",method="POST",status!~"400|409"}[1h])), 1e-9)
+      - record: apop:decision:error_ratio:30m
+        expr: |
+          sum(rate(http_server_requests_seconds_count{job="payment-service",uri="/v1/payments",method="POST",status=~"5.."}[30m]))
+          /
+          clamp_min(sum(rate(http_server_requests_seconds_count{job="payment-service",uri="/v1/payments",method="POST",status!~"400|409"}[30m])), 1e-9)
+      - record: apop:decision:error_ratio:6h
+        expr: |
+          sum(rate(http_server_requests_seconds_count{job="payment-service",uri="/v1/payments",method="POST",status=~"5.."}[6h]))
+          /
+          clamp_min(sum(rate(http_server_requests_seconds_count{job="payment-service",uri="/v1/payments",method="POST",status!~"400|409"}[6h])), 1e-9)
+      - alert: DecisionAvailabilityBurn
+        expr: apop:decision:error_ratio:5m > 0.0144 and apop:decision:error_ratio:1h > 0.0144
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: Decision availability is burning the 99.9 percent budget
+          description: POST /v1/payments error ratio excludes caller 400 and 409. Page when both the 5 minute and 1 hour windows exceed a 14.4 burn rate.
+      - alert: DecisionAvailabilityTicket
+        expr: apop:decision:error_ratio:30m > 0.006 and apop:decision:error_ratio:6h > 0.006
+        for: 5m
+        labels:
+          severity: ticket
+        annotations:
+          summary: Decision availability slow burn
+      - alert: DecisionLatencyBurn
+        expr: histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{job="payment-service",uri="/v1/payments",method="POST"}[5m]))) > 0.8
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: Decision latency p99 is above 800ms
+      - alert: SettlementLag
+        expr: histogram_quantile(0.99, sum by (le) (rate(apop_settlement_lag_seconds_bucket[5m]))) > 2
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: Book settlement lag p99 is above 2 seconds
+      - alert: OutboxUnpublishedAge
+        expr: apop_outbox_unpublished_age_seconds > 30
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: Oldest unpublished outbox row is older than 30 seconds
+      - alert: ConsumerLag
+        expr: kafka_consumergroup_lag{consumergroup=~"payment-settlement-executor|transaction-history-projector"} > 10
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: Settlement or history consumer is more than 10 records behind for 5 minutes
+          description: The Kafka exporter reports lag in records. The 10 second freshness objective is charted on the settlement and Kafka dashboards.
+      - alert: KafkaUnderReplicated
+        expr: kafka_topic_partition_under_replicated_partition > 0
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: A Kafka partition is under-replicated
+      - alert: DeadLetterGrowth
+        expr: sum by (topic) (increase(kafka_topic_partition_current_offset{topic=~".*\\.dlq"}[5m])) > 0
+        for: 5m
+        labels:
+          severity: ticket
+        annotations:
+          summary: A dead-letter topic received records
+      - alert: LedgerReplicationLag
+        expr: pg_replication_lag_seconds > 10
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: Ledger replay lag is above 10 seconds
